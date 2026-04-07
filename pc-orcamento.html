@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PC Builder — Orçamento Inteligente</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --surface2: #1a1a24;
+    --border: #2a2a3a;
+    --accent: #00ff88;
+    --accent2: #7b5cff;
+    --danger: #ff4466;
+    --text: #e8e8f0;
+    --muted: #6b6b80;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,255,136,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,255,136,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0 20px 60px;
+    position: relative;
+    z-index: 1;
+  }
+
+  header {
+    padding: 40px 0 20px;
+    text-align: center;
+  }
+
+  .logo-tag {
+    display: inline-block;
+    background: rgba(0,255,136,0.1);
+    border: 1px solid rgba(0,255,136,0.3);
+    color: var(--accent);
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    padding: 4px 12px;
+    border-radius: 100px;
+    margin-bottom: 16px;
+    letter-spacing: 2px;
+  }
+
+  h1 {
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -1px;
+  }
+
+  h1 span {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .subtitle {
+    color: var(--muted);
+    font-size: 15px;
+    margin-top: 10px;
+  }
+
+  /* API KEY BANNER */
+  .apikey-banner {
+    margin: 28px 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .apikey-banner.ok {
+    border-color: rgba(0,255,136,0.3);
+    background: rgba(0,255,136,0.04);
+  }
+
+  .apikey-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    white-space: nowrap;
+  }
+
+  .apikey-input {
+    flex: 1;
+    min-width: 200px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    padding: 8px 12px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .apikey-input:focus { border-color: var(--accent); }
+  .apikey-input::placeholder { color: var(--muted); }
+
+  .apikey-status {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  .apikey-status.ok { color: var(--accent); }
+  .apikey-status.empty { color: var(--muted); }
+
+  .btn-save-key {
+    background: var(--accent);
+    color: #000;
+    border: none;
+    border-radius: 8px;
+    padding: 9px 18px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .btn-save-key:hover { background: #00e87a; }
+
+  .btn-clear-key {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .btn-clear-key:hover { border-color: var(--danger); color: var(--danger); }
+
+  /* ADD PARTS */
+  .add-part-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+
+  .category-select {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    outline: none;
+    cursor: pointer;
+    flex: 1;
+    min-width: 140px;
+  }
+
+  .btn-add {
+    background: var(--surface2);
+    border: 1px dashed var(--border);
+    color: var(--muted);
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 10px 18px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .btn-add:hover { border-color: var(--accent); color: var(--accent); }
+
+  .btn-search-all {
+    background: var(--accent);
+    color: #000;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 20px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+  }
+
+  .btn-search-all:hover { background: #00e87a; transform: translateY(-1px); }
+  .btn-search-all:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  .btn-search-all .spinner {
+    width: 13px; height: 13px;
+    border: 2px solid rgba(0,0,0,0.3);
+    border-top-color: #000;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    display: none;
+  }
+
+  .btn-search-all.loading .spinner { display: block; }
+  .btn-search-all.loading .btn-text { display: none; }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* PARTS GRID */
+  .parts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+
+  .part-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    transition: all 0.3s;
+    animation: fadeIn 0.35s ease both;
+  }
+
+  .part-card:hover { border-color: rgba(0,255,136,0.25); transform: translateY(-2px); }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(14px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .part-card-header {
+    padding: 12px 14px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .part-category {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-weight: 700;
+  }
+
+  .cat-cpu    { background: rgba(255,180,0,0.12);   color: #ffb400; }
+  .cat-gpu    { background: rgba(123,92,255,0.12);  color: #7b5cff; }
+  .cat-ram    { background: rgba(0,200,255,0.12);   color: #00c8ff; }
+  .cat-ssd    { background: rgba(0,255,136,0.12);   color: #00ff88; }
+  .cat-mb     { background: rgba(255,100,100,0.12); color: #ff6464; }
+  .cat-psu    { background: rgba(255,165,0,0.12);   color: #ffa500; }
+  .cat-cooler { background: rgba(100,200,100,0.12); color: #64c864; }
+  .cat-case   { background: rgba(180,180,255,0.12); color: #b4b4ff; }
+
+  .part-remove {
+    background: none; border: none;
+    color: var(--muted); cursor: pointer;
+    font-size: 18px; line-height: 1;
+    padding: 2px 5px; border-radius: 4px;
+    transition: color 0.2s;
+  }
+  .part-remove:hover { color: var(--danger); }
+
+  .part-card-body { padding: 14px; }
+
+  .part-name-input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    padding: 8px 10px;
+    margin-bottom: 10px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .part-name-input:focus { border-color: var(--accent); }
+  .part-name-input::placeholder { color: var(--muted); }
+
+  .part-price-area { display: flex; align-items: center; gap: 8px; }
+
+  .price-symbol {
+    font-family: 'Space Mono', monospace;
+    color: var(--muted); font-size: 13px;
+  }
+
+  .part-price-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--border);
+    color: var(--accent);
+    font-family: 'Space Mono', monospace;
+    font-size: 20px; font-weight: 700;
+    padding: 4px 2px;
+    outline: none;
+    transition: border-color 0.2s;
+    width: 100%;
+  }
+  .part-price-input:focus { border-bottom-color: var(--accent); }
+  .part-price-input::placeholder { color: var(--border); font-size: 13px; }
+
+  .price-status {
+    font-size: 11px;
+    font-family: 'Space Mono', monospace;
+    margin-top: 6px; min-height: 14px;
+  }
+  .price-found    { color: var(--accent); }
+  .price-searching{ color: var(--accent2); }
+  .price-error    { color: var(--danger); }
+
+  /* EMPTY */
+  .empty-state {
+    grid-column: 1/-1;
+    text-align: center;
+    padding: 50px 20px;
+    color: var(--muted);
+  }
+  .empty-state .icon { font-size: 2.8rem; margin-bottom: 12px; opacity: 0.35; }
+  .empty-state p { font-size: 14px; line-height: 1.6; }
+
+  /* TOTAL */
+  .total-bar {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 18px 22px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 14px;
+    position: sticky;
+    bottom: 16px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+  }
+
+  .total-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .total-value {
+    font-family: 'Space Mono', monospace;
+    font-size: 1.9rem;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: -1px;
+  }
+
+  .total-count {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .btn-export {
+    background: linear-gradient(135deg, var(--accent2), #5a3ddd);
+    color: #fff; border: none;
+    border-radius: 10px;
+    padding: 11px 20px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700; font-size: 13px;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .btn-export:hover { opacity: 0.85; transform: translateY(-1px); }
+
+  /* MODAL */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.75);
+    backdrop-filter: blur(6px);
+    z-index: 100;
+    display: none;
+    align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .modal-overlay.active { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 28px;
+    max-width: 620px; width: 100%;
+    max-height: 80vh; overflow-y: auto;
+    position: relative;
+    animation: modalIn 0.25s ease;
+  }
+
+  @keyframes modalIn {
+    from { opacity: 0; transform: scale(0.95) translateY(16px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+  }
+
+  .modal-close {
+    position: absolute; top: 14px; right: 14px;
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--muted); width: 30px; height: 30px;
+    border-radius: 7px; cursor: pointer; font-size: 15px;
+    transition: color 0.2s;
+  }
+  .modal-close:hover { color: var(--text); }
+
+  .modal h2 {
+    font-size: 1.2rem; font-weight: 700;
+    margin-bottom: 18px; color: var(--accent);
+    font-family: 'Space Mono', monospace;
+  }
+
+  .modal pre {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px;
+    font-family: 'Space Mono', monospace;
+    font-size: 12px; line-height: 1.8;
+    color: var(--text);
+    white-space: pre-wrap; word-break: break-word;
+  }
+
+  .modal-actions { display: flex; gap: 10px; margin-top: 14px; }
+
+  .btn-copy {
+    background: var(--accent); color: #000;
+    border: none; border-radius: 8px;
+    padding: 9px 16px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700; font-size: 13px;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .btn-copy:hover { background: #00e87a; }
+
+  @media (max-width: 560px) {
+    .total-bar { flex-direction: column; text-align: center; }
+    .total-value { font-size: 1.5rem; }
+    .apikey-banner { flex-direction: column; align-items: stretch; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="logo-tag">⚡ AI-POWERED</div>
+    <h1>PC Builder<br><span>Orçamento Inteligente</span></h1>
+    <p class="subtitle">Monte seu PC e pesquise preços com inteligência artificial</p>
+  </header>
+
+  <!-- API KEY -->
+  <div class="apikey-banner" id="apikeyBanner">
+    <span class="apikey-label">🔑 API Key</span>
+    <input class="apikey-input" type="password" id="apikeyInput"
+      placeholder="Cole sua API key aqui: sk-ant-api03-..." />
+    <span class="apikey-status empty" id="apikeyStatus">não configurada</span>
+    <button class="btn-save-key" onclick="saveApiKey()">Salvar</button>
+    <button class="btn-clear-key" id="btnClearKey" onclick="clearApiKey()" style="display:none">Remover</button>
+  </div>
+
+  <!-- ADD ROW -->
+  <div class="add-part-row">
+    <select class="category-select" id="categorySelect">
+      <option value="cpu">🧠 Processador (CPU)</option>
+      <option value="gpu">🎮 Placa de Vídeo (GPU)</option>
+      <option value="ram">💾 Memória RAM</option>
+      <option value="ssd">💿 SSD / HD</option>
+      <option value="mb">🔌 Placa-Mãe</option>
+      <option value="psu">⚡ Fonte (PSU)</option>
+      <option value="cooler">❄️ Cooler</option>
+      <option value="case">🖥️ Gabinete</option>
+    </select>
+    <button class="btn-add" onclick="addPart()">+ Adicionar Peça</button>
+    <button class="btn-search-all" id="btnSearch" onclick="searchAllPrices()">
+      <div class="spinner"></div>
+      <span class="btn-text">🔍 Pesquisar Preços</span>
+    </button>
+  </div>
+
+  <!-- PARTS -->
+  <div class="parts-grid" id="partsGrid"></div>
+
+  <!-- TOTAL -->
+  <div class="total-bar">
+    <div>
+      <div class="total-label">Total Estimado</div>
+      <div class="total-count" id="partsCount">0 peças</div>
+    </div>
+    <div class="total-value" id="totalValue">R$ 0,00</div>
+    <button class="btn-export" onclick="openExport()">📋 Exportar</button>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <h2>// ORÇAMENTO GERADO</h2>
+    <pre id="exportText"></pre>
+    <div class="modal-actions">
+      <button class="btn-copy" onclick="copyExport()">📋 Copiar</button>
+      <button class="btn-copy" style="background:var(--surface2);color:var(--text);border:1px solid var(--border)" onclick="closeModal()">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const LABELS = {
+  cpu:'Processador', gpu:'Placa de Vídeo', ram:'Memória RAM',
+  ssd:'SSD / HD', mb:'Placa-Mãe', psu:'Fonte', cooler:'Cooler', case:'Gabinete'
+};
+const EMOJIS = {
+  cpu:'🧠', gpu:'🎮', ram:'💾', ssd:'💿', mb:'🔌', psu:'⚡', cooler:'❄️', case:'🖥️'
+};
+
+let parts = [];
+let idCounter = 0;
+
+// ── API KEY ──────────────────────────────────────────
+function saveApiKey() {
+  const val = document.getElementById('apikeyInput').value.trim();
+  if (!val.startsWith('sk-ant-')) {
+    alert('API key inválida!\n\nEla deve começar com "sk-ant-..."\nPegue em: console.anthropic.com → API Keys');
+    return;
+  }
+  localStorage.setItem('anthropic_key', val);
+  updateKeyUI(val);
+  document.getElementById('apikeyInput').value = '';
+  alert('✅ API key salva com sucesso!\nEla fica guardada só no seu navegador.');
+}
+
+function clearApiKey() {
+  if (!confirm('Remover a API key salva?')) return;
+  localStorage.removeItem('anthropic_key');
+  updateKeyUI('');
+}
+
+function getApiKey() {
+  return localStorage.getItem('anthropic_key') || '';
+}
+
+function updateKeyUI(key) {
+  const banner   = document.getElementById('apikeyBanner');
+  const status   = document.getElementById('apikeyStatus');
+  const clearBtn = document.getElementById('btnClearKey');
+  if (key) {
+    banner.classList.add('ok');
+    status.className = 'apikey-status ok';
+    status.textContent = '✓ configurada';
+    clearBtn.style.display = 'inline-block';
+  } else {
+    banner.classList.remove('ok');
+    status.className = 'apikey-status empty';
+    status.textContent = 'não configurada';
+    clearBtn.style.display = 'none';
+  }
+}
+
+// ── PEÇAS ────────────────────────────────────────────
+function addPart(cat, name='', price='') {
+  const category = cat || document.getElementById('categorySelect').value;
+  const id = ++idCounter;
+  parts.push({ id, category, name, price });
+  renderParts();
+}
+
+function removePart(id) {
+  parts = parts.filter(p => p.id !== id);
+  renderParts();
+}
+
+function updatePart(id, field, value) {
+  const p = parts.find(p => p.id === id);
+  if (p) { p[field] = value; if (field === 'price') updateTotal(); }
+}
+
+function esc(s) {
+  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function renderParts() {
+  const grid = document.getElementById('partsGrid');
+  grid.innerHTML = '';
+
+  if (parts.length === 0) {
+    grid.innerHTML = `<div class="empty-state">
+      <div class="icon">🖥️</div>
+      <p>Nenhuma peça adicionada.<br>Use o botão <strong>+ Adicionar Peça</strong> acima!</p>
+    </div>`;
+    updateTotal();
+    return;
+  }
+
+  parts.forEach((part, i) => {
+    const card = document.createElement('div');
+    card.className = 'part-card';
+    card.style.animationDelay = (i * 0.04) + 's';
+    card.id = 'card-' + part.id;
+    card.innerHTML = `
+      <div class="part-card-header">
+        <span class="part-category cat-${part.category}">${EMOJIS[part.category]} ${LABELS[part.category]}</span>
+        <button class="part-remove" onclick="removePart(${part.id})">×</button>
+      </div>
+      <div class="part-card-body">
+        <input class="part-name-input" type="text" placeholder="Ex: RTX 4070, Ryzen 5 7600X..."
+          value="${esc(part.name)}"
+          oninput="updatePart(${part.id},'name',this.value)"
+          id="name-${part.id}" />
+        <div class="part-price-area">
+          <span class="price-symbol">R$</span>
+          <input class="part-price-input" type="number" min="0" step="0.01"
+            placeholder="0,00"
+            value="${part.price||''}"
+            oninput="updatePart(${part.id},'price',this.value)"
+            id="price-${part.id}" />
+        </div>
+        <div class="price-status" id="status-${part.id}"></div>
+      </div>`;
+    grid.appendChild(card);
+  });
+  updateTotal();
+}
+
+function updateTotal() {
+  let total = 0, count = 0;
+  parts.forEach(p => {
+    const v = parseFloat(p.price);
+    if (!isNaN(v) && v > 0) { total += v; count++; }
+  });
+  document.getElementById('totalValue').textContent =
+    'R$ ' + total.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+  document.getElementById('partsCount').textContent =
+    parts.length + ' peça' + (parts.length!==1?'s':'') + ' · ' + count + ' com preço';
+}
+
+// ── PESQUISA ─────────────────────────────────────────
+async function searchAllPrices() {
+  const key = getApiKey();
+  if (!key) {
+    alert('⚠️ Você precisa salvar sua API key primeiro!\n\nCole ela no campo "" acima e clique em Salvar.');
+    return;
+  }
+  if (parts.length === 0) {
+    alert('Adicione pelo menos uma peça!');
+    return;
+  }
+
+  const btn = document.getElementById('btnSearch');
+  btn.classList.add('loading');
+  btn.disabled = true;
+
+  parts.forEach(p => {
+    const s = document.getElementById('status-' + p.id);
+    if (s) { s.className = 'price-status price-searching'; s.textContent = '⏳ buscando...'; }
+  });
+
+  const lista = parts.map(p =>
+    LABELS[p.category] + ': "' + (p.name || LABELS[p.category]) + '"'
+  ).join('\n');
+
+  const prompt = `Você é especialista em preços de hardware no Brasil.
+Pesquise os preços atuais no mercado brasileiro para estas peças:
+
+${lista}
+
+Responda APENAS com JSON puro (sem markdown, sem texto extra):
+{"parts":[{"index":0,"name":"nome do produto","price":1299.90,"note":"nota curta"}]}
+
+Preços em Reais (BRL), realistas para 2025. Retorne EXATAMENTE ${parts.length} itens na mesma ordem.`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      const msg = data.error?.message || 'Erro desconhecido';
+      if (res.status === 401) {
+        alert('❌ API key inválida ou expirada.\nVerifique em: console.anthropic.com → API Keys');
+      } else if (res.status === 429) {
+        alert('⏳ Limite de uso atingido. Aguarde alguns minutos e tente novamente.');
+      } else {
+        alert('Erro: ' + msg);
+      }
+      throw new Error(msg);
+    }
+
+    const text = (data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('');
+    const clean = text.replace(/```json|```/g,'').trim();
+    const match = clean.match(/\{[\s\S]*\}/);
+    if (!match) throw new Error('Resposta inválida da IA');
+
+    const parsed = JSON.parse(match[0]);
+    (parsed.parts||[]).forEach((r, i) => {
+      if (i >= parts.length) return;
+      const part = parts[i];
+      const s = document.getElementById('status-'+part.id);
+      if (r.price > 0) {
+        part.price = r.price;
+        const pel = document.getElementById('price-'+part.id);
+        if (pel) pel.value = r.price;
+        const nel = document.getElementById('name-'+part.id);
+        if (nel && r.name && !part.name) { part.name = r.name; nel.value = r.name; }
+        if (s) { s.className='price-status price-found'; s.textContent='✓ '+(r.note||'preço encontrado'); }
+      } else {
+        if (s) { s.className='price-status price-error'; s.textContent='⚠ insira manualmente'; }
+      }
+    });
+    updateTotal();
+
+  } catch(err) {
+    console.error(err);
+    parts.forEach(p => {
+      const s = document.getElementById('status-'+p.id);
+      if (s && s.textContent.includes('buscando')) {
+        s.className='price-status price-error';
+        s.textContent='⚠ erro — tente novamente';
+      }
+    });
+  } finally {
+    btn.classList.remove('loading');
+    btn.disabled = false;
+  }
+}
+
+// ── EXPORT ───────────────────────────────────────────
+function openExport() {
+  if (parts.length === 0) { alert('Adicione peças primeiro!'); return; }
+  let total = 0;
+  const lines = parts.map(p => {
+    const v = parseFloat(p.price)||0; total += v;
+    const name = p.name || LABELS[p.category];
+    const pr = v > 0 ? 'R$ '+v.toLocaleString('pt-BR',{minimumFractionDigits:2}) : 'a definir';
+    return EMOJIS[p.category]+' '+LABELS[p.category].padEnd(18)+' '+name.padEnd(28)+' '+pr;
+  });
+  const now = new Date().toLocaleDateString('pt-BR');
+  document.getElementById('exportText').textContent =
+`╔══════════════════════════════════════════════════╗
+║        ORÇAMENTO DE PC — ${now}           ║
+╚══════════════════════════════════════════════════╝
+
+${lines.join('\n')}
+
+──────────────────────────────────────────────────
+TOTAL ESTIMADO: R$ ${total.toLocaleString('pt-BR',{minimumFractionDigits:2})}
+──────────────────────────────────────────────────
+Gerado por PC Builder · Orçamento Inteligente`;
+  document.getElementById('modalOverlay').classList.add('active');
+}
+
+function closeModal() { document.getElementById('modalOverlay').classList.remove('active'); }
+
+function copyExport() {
+  navigator.clipboard.writeText(document.getElementById('exportText').textContent).then(() => {
+    const b = event.target; b.textContent = '✅ Copiado!';
+    setTimeout(()=>{ b.textContent='📋 Copiar'; }, 2000);
+  });
+}
+
+document.getElementById('modalOverlay').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeModal();
+});
+
+// ── INIT ─────────────────────────────────────────────
+updateKeyUI(getApiKey());
+addPart('cpu'); addPart('gpu'); addPart('ram');
+addPart('ssd'); addPart('mb'); addPart('psu');
+</script>
+</body>
+</html>
